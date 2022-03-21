@@ -19,7 +19,7 @@ class Database:
 
     def getDetail(self, id):
         cur = self.connect()
-        cur.execute("SELECT * FROM products WHERE productID = %s", (id))
+        cur.execute("CALL tampil_detailprodukuser(%s)", (id))
         row_headers = [x[0] for x in cur.description]  
         rv = cur.fetchall()
         cur.close()
@@ -59,3 +59,12 @@ class Database:
         )
         mysql.connection.commit()
         cur.close()
+
+    def getUserProduct(self,email):
+        cur = self.connect()
+        cur.execute("CALL tampil_produkListUser(%s);",[email]
+        )
+        row_headers = [x[0] for x in cur.description]  
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers

@@ -29,8 +29,6 @@ def detail():
     booksData = toJsonFormat(data, row_headers)
     return jsonify(booksData)
 
-
-
 @cross_origin
 @app.route("/login", methods=["POST"])
 def create_token():
@@ -86,14 +84,12 @@ def fetchUser():
 @app.route("/updateuser", methods=["PATCH"])
 @jwt_required()
 def updateUser():
-    print("ini update")
     try:
         current_user_email = get_jwt_identity()
         password = request.json.get("password", None)
         no_telp = request.json.get("no_telp", None)
         last_name = request.json.get("last_name", None)
         first_name = request.json.get("first_name", None)
-        print(current_user_email,password,no_telp,last_name,first_name)
         db.updateUser(current_user_email,password,no_telp,first_name,last_name)
         return jsonify({'msg':'update succeed'}),200
     except:
@@ -114,11 +110,36 @@ def updateProfilePic():
     except:
         return jsonify({'msg':'error while updating'}),400
     
+@cross_origin
+@app.route("/userproduct")
+@jwt_required()
+def userProduct():
+    try:
+        current_user_email = get_jwt_identity()
+        data, row_headers = db.getUserProduct(current_user_email)
+        booksData = toJsonFormat(data, row_headers)
+        return jsonify(booksData),200
+    except:
+        return jsonify({'msg':'error while fetching userproduct'}),400
 
+#belum jadi
+@cross_origin
+@app.route("/addproduct", methods=["POST"])
+@jwt_required()
+def addProduct():
+    current_user_email = get_jwt_identity()
+    namaBuku = request.json.get("nama", None)
+    desc = request.json.get("deskripsi", None)
+    harga = request.json.get("harga", None)
+    jumlah = request.json.get("jumlah", None)
+    image = request.json.get("gambar", None)
+    desc = request.json.get("deskripsi", None)
+    data, row_headers = db.getUserProduct(current_user_email)
+    booksData = toJsonFormat(data, row_headers)
+    return jsonify(booksData)
 
 if __name__ == "__main__":
     app.run()
-
 
 @cross_origin
 @app.errorhandler(404)
