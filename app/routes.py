@@ -96,7 +96,7 @@ def updateUser():
         print("gagal")
         return jsonify({'msg':'error while updating'}),400
 
-    
+
 @cross_origin
 @app.route("/updateprofilepic", methods=["PATCH"])
 @jwt_required()
@@ -122,21 +122,54 @@ def userProduct():
     except:
         return jsonify({'msg':'error while fetching userproduct'}),400
 
-#belum jadi
+
 @cross_origin
 @app.route("/addproduct", methods=["POST"])
 @jwt_required()
 def addProduct():
-    current_user_email = get_jwt_identity()
-    namaBuku = request.json.get("nama", None)
-    desc = request.json.get("deskripsi", None)
-    harga = request.json.get("harga", None)
-    jumlah = request.json.get("jumlah", None)
-    image = request.json.get("gambar", None)
-    desc = request.json.get("deskripsi", None)
-    data, row_headers = db.getUserProduct(current_user_email)
-    booksData = toJsonFormat(data, row_headers)
-    return jsonify(booksData)
+    try:
+        current_user_email = get_jwt_identity()
+        namaBuku = request.json.get("nama", None)
+        desc = request.json.get("deskripsi", None)
+        harga = request.json.get("harga", None)
+        jumlah = request.json.get("jumlah", None)
+        image = request.json.get("gambar", None)
+
+        db.addProduct(current_user_email, namaBuku, desc, harga, jumlah, image)
+        return jsonify({"msg": "insert product success"}), 200
+    except:
+        return jsonify({'msg':'error while adding product'}),400
+
+@cross_origin
+@app.route("/updateproduct", methods=["PATCH"])
+@jwt_required()
+def updateProduct():
+    try:
+        current_user_email = get_jwt_identity()
+        productID = request.json.get("id", None)
+        namaBuku = request.json.get("nama", None)
+        desc = request.json.get("deskripsi", None)
+        harga = request.json.get("harga", None)
+        jumlah = request.json.get("jumlah", None)
+        image = request.json.get("gambar", None)
+
+        db.updateProduct(productID,current_user_email, namaBuku, desc, harga, jumlah, image)
+        
+        return jsonify({"msg": "update product success"}), 200
+    except:
+        return jsonify({'msg':'error while updating product'}),400
+
+@cross_origin
+@app.route("/deleteproduct", methods=["PATCH"])
+@jwt_required()
+def deleteProduct():
+    try:
+        productID = request.json.get("id", None)
+
+        db.deleteProduct(productID)
+        return jsonify({"msg": "delete product success"}), 200
+    except:
+        return jsonify({'msg':'error while deleting product'}),400
 
 if __name__ == "__main__":
     app.run()

@@ -68,3 +68,30 @@ class Database:
         rv = cur.fetchall()
         cur.close()
         return rv, row_headers
+
+    def addProduct(self, email, nama, deskripsi, harga, jumlah,image):
+        cur = self.connect()
+        cur.execute(
+            "CALL addProduct(%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP());",
+            (email, nama, deskripsi, harga, jumlah, image)
+        )
+        mysql.connection.commit()
+        cur.close()
+
+    def updateProduct(self,productID,current_user_email, namaBuku, desc, harga, jumlah, image):
+        cur = self.connect()
+        cur.execute(
+            "CALL changeProduct(%s,%s,%s,%s,%s,%s,%s);",
+            (productID, current_user_email, namaBuku, desc, harga,jumlah, image)
+        )
+        mysql.connection.commit()
+        cur.close()
+
+    def deleteProduct(self,productID):
+        cur = self.connect()
+        cur.execute(
+            "CALL delproduct(%s);",
+            [productID]
+        )
+        mysql.connection.commit()
+        cur.close()
