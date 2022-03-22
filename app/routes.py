@@ -133,7 +133,7 @@ def addProduct():
         desc = request.json.get("deskripsi", None)
         harga = request.json.get("harga", None)
         jumlah = request.json.get("jumlah", None)
-        image = request.json.get("gambar", None)
+        image = request.json.get("image_product", None)
 
         db.addProduct(current_user_email, namaBuku, desc, harga, jumlah, image)
         return jsonify({"msg": "insert product success"}), 200
@@ -146,12 +146,12 @@ def addProduct():
 def updateProduct():
     try:
         current_user_email = get_jwt_identity()
-        productID = request.json.get("id", None)
+        productID = request.args.get("id", None)
         namaBuku = request.json.get("nama", None)
         desc = request.json.get("deskripsi", None)
         harga = request.json.get("harga", None)
         jumlah = request.json.get("jumlah", None)
-        image = request.json.get("gambar", None)
+        image = request.json.get("image_product", None)
 
         db.updateProduct(productID,current_user_email, namaBuku, desc, harga, jumlah, image)
         
@@ -160,11 +160,11 @@ def updateProduct():
         return jsonify({'msg':'error while updating product'}),400
 
 @cross_origin
-@app.route("/deleteproduct", methods=["PATCH"])
+@app.route("/deleteproduct", methods=["DELETE"])
 @jwt_required()
 def deleteProduct():
     try:
-        productID = request.json.get("id", None)
+        productID = request.args.get("id", None)
 
         db.deleteProduct(productID)
         return jsonify({"msg": "delete product success"}), 200
