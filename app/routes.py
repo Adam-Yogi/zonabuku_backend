@@ -146,7 +146,7 @@ def addProduct():
 def updateProduct():
     try:
         current_user_email = get_jwt_identity()
-        productID = request.args.get("id", None)
+        productID = request.json.get("id", None)
         namaBuku = request.json.get("nama", None)
         desc = request.json.get("deskripsi", None)
         harga = request.json.get("harga", None)
@@ -154,7 +154,7 @@ def updateProduct():
         image = request.json.get("image_product", None)
 
         db.updateProduct(productID,current_user_email, namaBuku, desc, harga, jumlah, image)
-        
+    
         return jsonify({"msg": "update product success"}), 200
     except:
         return jsonify({'msg':'error while updating product'}),400
@@ -164,10 +164,11 @@ def updateProduct():
 @jwt_required()
 def deleteProduct():
     try:
-        productID = request.args.get("id", None)
+        productID = request.json.get("id")
 
         db.deleteProduct(productID)
-        return jsonify({"msg": "delete product success"}), 200
+        response = jsonify({"msg": "delete product success"}), 200
+        return response
     except:
         return jsonify({'msg':'error while deleting product'}),400
 
