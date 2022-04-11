@@ -95,3 +95,41 @@ class Database:
         )
         mysql.connection.commit()
         cur.close()
+
+    def addToCart(self, email, productID, jumlah):
+        cur = self.connect()
+        cur.execute(
+            "CALL addToCart(%s,%s,%s);",
+            (email, productID, jumlah)
+        )
+        mysql.connection.commit()
+        cur.close()
+
+    def getCartItem(self, email):
+        cur = self.connect()
+        cur.execute(
+            "CALL getCartItem(%s);",
+            [email]
+        )
+        row_headers = [x[0] for x in cur.description]  
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
+    def deleteCartItem(self, email, productID, jumlah):
+        cur = self.connect()
+        cur.execute(
+            "CALL delCartItem(%s,%s,%s);",
+            (email, productID, jumlah)
+        )
+        mysql.connection.commit()
+        cur.close()
+
+    def addCartItemQuantity(self, email, productID, jumlah):
+        cur = self.connect()
+        cur.execute(
+            "CALL addItemQuantity(%s,%s,%s);",
+            (email, productID, jumlah)
+        )
+        mysql.connection.commit()
+        cur.close()

@@ -18,6 +18,7 @@ db = Database()
 def home():
     data, row_headers = db.getNew()
     booksData = toJsonFormat(data, row_headers)
+    
     return jsonify(booksData)
 
 
@@ -171,6 +172,27 @@ def deleteProduct():
         return response
     except:
         return jsonify({'msg':'error while deleting product'}),400
+
+@cross_origin
+@app.route("/addCartItem", methods=["POST"])
+@jwt_required()
+def addCartItem():
+    try:
+        current_user_email = get_jwt_identity()
+        productID = request.json.get("id", None)
+        jumlah = request.json.get("jumlah", None)
+
+        data, row_headers = db.getCartItem(current_user_email)
+        booksData = toJsonFormat(data, row_headers)
+
+        if any(d['productID']==productID for d in booksData):
+            db.addCartItemQuantity(current_user_email, productID, jumlah)
+        else:
+            db.addToCart(current_user_email, productID, jumlah)
+        
+        return jsonify({"msg": "add to cart success"}), 200
+    except:
+        return jsonify({'msg':'error while adding product'}),400
 
 if __name__ == "__main__":
     app.run()
