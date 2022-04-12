@@ -194,6 +194,18 @@ def addCartItem():
     except:
         return jsonify({'msg':'error while adding product'}),400
 
+@cross_origin
+@app.route("/getCartItem", methods=["GET"])
+@jwt_required
+def getCartItem():
+    try:
+        current_user_email = get_jwt_identity()
+        data, row_headers = db.getCartItem(current_user_email)
+        cart_item = toJsonFormat(data, row_headers)
+        return jsonify(cart_item), 200
+    except:
+        return jsonify({'msg':'error while getting cart item'}), 400
+
 if __name__ == "__main__":
     app.run()
 
