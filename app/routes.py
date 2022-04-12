@@ -196,15 +196,25 @@ def addCartItem():
 
 @cross_origin
 @app.route("/getCartItem", methods=["GET"])
-@jwt_required
+@jwt_required()
 def getCartItem():
     try:
         current_user_email = get_jwt_identity()
         data, row_headers = db.getCartItem(current_user_email)
         cart_item = toJsonFormat(data, row_headers)
-        return jsonify(cart_item), 200
+        total_harga = 0
+        total_quantity = 0
+        header_name = ["data", "totalHarga", "totalQuantity"]
+        for item in cart_item:
+            total_harga += item["harga"] * item["quantity"]
+            total_quantity += item["quantity"]
+        data_list = [cart_item, total_harga, total_quantity]
+        # bikin dictionary dari dua list header_name:data_list
+        res = {header_name[i]: data_list[i] for i in range(len(data_list))}
+
+        return jsonify(res), 200
     except:
-        return jsonify({'msg':'error while getting cart item'}), 400
+        return jsonify({"msg": "error while getting cart item"}), 400
 
 @cross_origin
 @app.route("/delCartItem", methods=["DELETE"])
