@@ -19,7 +19,7 @@ class Database:
 
     def getDetail(self, id):
         cur = self.connect()
-        cur.execute("CALL tampil_detailprodukuser(%s)", (id))
+        cur.execute("CALL tampil_detailprodukuser(%s)", [id])
         row_headers = [x[0] for x in cur.description]  
         rv = cur.fetchall()
         cur.close()
@@ -27,7 +27,7 @@ class Database:
 
     def getUser(self, email):
         cur = self.connect()
-        cur.execute("SELECT * FROM user WHERE email = '%s'" % (email))
+        cur.execute("SELECT * FROM user WHERE email = '%s'" % [email])
         row_headers = [x[0] for x in cur.description] 
         rv = cur.fetchall()
         cur.close()
