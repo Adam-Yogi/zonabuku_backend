@@ -206,6 +206,21 @@ def getCartItem():
     except:
         return jsonify({'msg':'error while getting cart item'}), 400
 
+@cross_origin
+@app.route("/delCartItem", methods=["DELETE"])
+@jwt_required()
+def delCartItem():
+    try:
+        current_user_email = get_jwt_identity()
+        productID = request.json.get("id", None)
+        jumlah = request.json.get("jumlah", None)
+
+        db.deleteCartItem(current_user_email,productID,jumlah)
+        response = jsonify({"msg": "delete cart item success"}), 200
+        return response
+    except:
+        return jsonify({'msg':'error while deleting cart item'}),400
+
 if __name__ == "__main__":
     app.run()
 
