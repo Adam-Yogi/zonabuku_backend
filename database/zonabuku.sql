@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 11, 2022 at 04:47 PM
+-- Generation Time: Apr 12, 2022 at 02:51 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.2
 
@@ -58,7 +58,7 @@ END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `delCartItem` (IN `in_userEmail` VARCHAR(100), IN `in_productID` INT, IN `in_quantity` INT)  BEGIN
 DELETE FROM cart
-WHERE cart.userEmail = in_userEmail;
+WHERE cart.userEmail = in_userEmail && cart.productID = in_productID;
 UPDATE products
 SET jumlah = jumlah + in_quantity
 WHERE productID = in_productID;
@@ -132,7 +132,7 @@ CREATE TABLE `products` (
 INSERT INTO `products` (`productID`, `userEmail`, `nama`, `deskripsi`, `harga`, `jumlah`, `image_product`, `tgl_input`) VALUES
 (1, 'aadam@gmail.com', 'Laskar Pelangi', '\"Bangunan itu nyaris rubuh. Dindingnya miring bersangga sebalok kayu. Atapnya bocor di mana-mana. Tetapi, berpasang-pasang mata mungil menatap penuh harap. Hendak ke mana lagikah mereka harus bersekolah selain tempat itu? Tak peduli seberat apa pun kondisi sekolah itu, sepuluh anak dari keluarga miskin itu tetap bergeming. Di dada mereka, telah menggumpal tekad untuk maju.\" Laskar Pelangi, kisah perjuangan anak-anak untuk mendapatkan ilmu. Diceritakan dengan lucu dan menggelitik, novel ini menjadi novel terlaris di Indonesia. Inspiratif dan layak dimiliki siapa saja yang mencintai pendidikan dan keajaiban masa kanak-kanak.', '70000.00', 3, 'https://i.ibb.co/FDg4rbg/laskarpelangi.jpg', '2022-03-07 17:23:27'),
 (2, 'aadam@gmail.com', 'Perahu Kertas', 'Namanya Kugy. Mungil, pengkhayal, dan berantakan. Dari benaknya, mengalir untaian dongeng indah. Keenan belum pernah bertemu manusia seaneh itu ....\r\nNamanya Keenan. Cerdas, artistik, dan penuh kejutan. Dari tangannya, mewujud lukisan-lukisan magis. Kugy belum pernah bertemu manusia seajaib itu ....\r\nDan kini mereka berhadapan di antara hamparan misteri dan rintangan. Akankah dongeng dan lukisan itu bersatu? Akankah hati dan impian mereka bertemu?', '69000.00', 2, 'https://i.ibb.co/M19pvC7/perahukertas.jpg', '2022-03-07 17:37:48'),
-(3, 'aadam@gmail.com', 'National Geographic Indonesia Edisi Januari 2022', 'Pagebluk membuat kita bagai menaiki roller coaster: Vaksin baru mendorong optimisme. Namun kesalahan informasi dan kekurangan persediaan, mengganggu imunisasi. Virus pun tetap mengancam. 54 - Perselisihan budaya, politik, tanah, dan lainnya, berkobar di seluruh dunia—termasuk di AS, yang menghadapi serangan terhadap demokrasinya dan terus bergulat degan warisan rasismenya. 68 - Dalam tahun yangpenuh tantangan, terdapat pencapaian yang menggembirakan dalam pelestarian harta alam dan budaya. Upaya-upaya kita mencerminkan harapan serta rasa kemanusiaan kita.', '59000.00', 1, 'https://i.ibb.co/5LfSK7m/nationalgeographicjan22.jpg', '2022-03-07 17:37:48'),
+(3, 'aadam@gmail.com', 'National Geographic Indonesia Edisi Januari 2022', 'Pagebluk membuat kita bagai menaiki roller coaster: Vaksin baru mendorong optimisme. Namun kesalahan informasi dan kekurangan persediaan, mengganggu imunisasi. Virus pun tetap mengancam. 54 - Perselisihan budaya, politik, tanah, dan lainnya, berkobar di seluruh dunia—termasuk di AS, yang menghadapi serangan terhadap demokrasinya dan terus bergulat degan warisan rasismenya. 68 - Dalam tahun yangpenuh tantangan, terdapat pencapaian yang menggembirakan dalam pelestarian harta alam dan budaya. Upaya-upaya kita mencerminkan harapan serta rasa kemanusiaan kita.', '59000.00', 0, 'https://i.ibb.co/5LfSK7m/nationalgeographicjan22.jpg', '2022-03-07 17:37:48'),
 (4, 'doge@gmail.com', 'Bobo Edisi 47 2022', 'by Majalah Bobo', '15000.00', 10, 'https://i.ibb.co/G0Qg7GT/bobo47.jpg', '2022-03-07 17:37:48'),
 (5, 'emailSaya', 'Dokter Smurf', 'Gimana jadinya kalau ada Dokter Smurf di desa smurf? Apalagi ada Smurfin yang jadi perawatnya? Kehebohan mendadak terjadi di tengah-tengah warga smurf. Semua smurf sakit dan semua smurf mau dirawat oleh Smurfin yang cantik. Bahkan Papa Smurf yang mengaku sehat pun, ikut terkapar sakit dan harus dirawat. Berhasilkah Dokter Smurf menyembuhkan semua smurf yang sakit?', '38500.00', 5, 'https://i.ibb.co/FWyVqTG/doktersmurf.jpg', '2022-03-07 17:37:48'),
 (6, 'doge@gmail.com', 'Diet Ketogenik: Panduan & Resep Sehat', 'Diet golongan darah, diet Food Combining, diet mayo, adalah beberapa program diet yang pernah menjadi tren di Indonesia. Kini diet yang semakin populer adalah diet Ketogenik atau diet Keto. Manfaatnya antara lain dipercaya dapat menurunkan berat badan secara signifikan. Buku ini selain beri panduan untuk memulai diet keto dengan benar juga dilengkapi dengan lebih dari 90 resep sehat dan lezat terdiri dari aneka snack, lauk, minuman, dan dessert yang disusun sedemikian rupa oleh penulis agar para pelaku diet Keto dapat menikmati pengalaman diet yang menyenangkan.', '141900.00', 2, 'https://i.ibb.co/x1JVGkn/dietketogenik.jpg', '2022-03-07 19:16:47'),
@@ -248,7 +248,7 @@ ALTER TABLE `user_address`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `cartID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `cartID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `products`

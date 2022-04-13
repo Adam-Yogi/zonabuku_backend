@@ -27,7 +27,7 @@ class Database:
 
     def getUser(self, email):
         cur = self.connect()
-        cur.execute("SELECT * FROM user WHERE email = '%s'" % [email])
+        cur.execute("SELECT * FROM user WHERE email = %s", [email])
         row_headers = [x[0] for x in cur.description] 
         rv = cur.fetchall()
         cur.close()
@@ -105,6 +105,15 @@ class Database:
         mysql.connection.commit()
         cur.close()
 
+    def addCartItemQuantity(self, email, productID, jumlah):
+        cur = self.connect()
+        cur.execute(
+            "CALL addItemQuantity(%s,%s,%s);",
+            (email, productID, jumlah)
+        )
+        mysql.connection.commit()
+        cur.close()
+
     def getCartItem(self, email):
         cur = self.connect()
         cur.execute(
@@ -125,11 +134,4 @@ class Database:
         mysql.connection.commit()
         cur.close()
 
-    def addCartItemQuantity(self, email, productID, jumlah):
-        cur = self.connect()
-        cur.execute(
-            "CALL addItemQuantity(%s,%s,%s);",
-            (email, productID, jumlah)
-        )
-        mysql.connection.commit()
-        cur.close()
+    
