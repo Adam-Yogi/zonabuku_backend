@@ -25,6 +25,14 @@ class Database:
         cur.close()
         return rv, row_headers
 
+    def getUserAndAddress(self, email):
+        cur = self.connect()
+        cur.execute("CALL getuserprofile(%s);",[email])
+        row_headers = [x[0] for x in cur.description] 
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
     def getUser(self, email):
         cur = self.connect()
         cur.execute("SELECT * FROM user WHERE email = %s", [email])

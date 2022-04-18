@@ -79,7 +79,7 @@ def toJsonFormat(data, row_headers):
 @jwt_required()
 def fetchUser():
     current_user_email = get_jwt_identity()
-    data, row_headers = db.getUser(current_user_email)
+    data, row_headers = db.getUserAndAddress(current_user_email)
     user_json = toJsonFormat(data, row_headers)
     return jsonify(user_json)
 
@@ -242,28 +242,33 @@ def checkout():
         data, row_headers = db.getCartItem(current_user_email)
         cart_item = toJsonFormat(data, row_headers)
         total_harga = 0
-        #sorting berdasarkan email
-        cart_item.sort(key=lambda x:x["userEmail"])
-        #tambahkan total harga di tiap data
+        # sorting berdasarkan email
+        cart_item.sort(key=lambda x: x["userEmail"])
+        # tambahkan total harga di tiap data
         for item in cart_item:
             total_harga = item["harga"] * item["quantity"]
             item["totalHarga"] = total_harga
-        
+
         cartAll = []
-        #Buat list of list. Dalam list ada dictionary. Dictionary pertama isi data address. 
-        #Dictionary selanjutnya berisi data buku yang dari penjual dengan email yang sama 
-        for key, value in groupby(cart_item, key=itemgetter('userEmail')):
+        # Buat list of list. Dalam list ada dictionary. Dictionary pertama isi data address.
+        # Dictionary selanjutnya berisi data buku yang dari penjual dengan email yang sama
+        for key, value in groupby(cart_item, key=itemgetter("userEmail")):
             data, row_headers = db.getAddress(current_user_email)
             address = toJsonFormat(data, row_headers)
-            addressData =  {"email":key,"alamat":address[0]["alamat"],"idKota":address[0]["idKota"],
-                            "kota":address[0]["kota"],"idprovinsi":address[0]["idProvinsi"],"provinsi":address[0]["provinsi"]}
-            cartGrouped = []
-            cartGrouped.append(addressData)
+            checkoutItem = {
+                "email": key,
+                "alamat": address[0]["alamat"],
+                "idKota": address[0]["idKota"],
+                "kota": address[0]["kota"],
+                "idprovinsi": address[0]["idProvinsi"],
+                "provinsi": address[0]["provinsi"],
+                "produk": [],
+            }
+
             print(key)
             for k in value:
-                cartGrouped.append(k)
-            cartAll.append(cartGrouped)
-        
+                checkoutItem["produk"].append(k)
+            cartAll.append(checkoutItem)
         return jsonify(cartAll)
     except:
         return jsonify({"msg": "error while getting cart item"}), 400
@@ -302,4 +307,5 @@ if __name__ == "__main__":
 @app.errorhandler(404)
 def page_not_found(error):
     return error
+
 
