@@ -236,7 +236,7 @@ def delCartItem():
 @cross_origin
 @app.route("/checkout", methods=["GET"])
 @jwt_required()
-def checkout():
+def tes():
     try:
         current_user_email = get_jwt_identity()
         data, row_headers = db.getCartItem(current_user_email)
@@ -253,10 +253,11 @@ def checkout():
         # Buat list of list. Dalam list ada dictionary. Dictionary pertama isi data address.
         # Dictionary selanjutnya berisi data buku yang dari penjual dengan email yang sama
         for key, value in groupby(cart_item, key=itemgetter("userEmail")):
-            data, row_headers = db.getAddress(current_user_email)
+            data, row_headers = db.getUserAndAddress(key)
             address = toJsonFormat(data, row_headers)
             checkoutItem = {
                 "email": key,
+                "namaPenjual": address[0]["nama"],
                 "alamat": address[0]["alamat"],
                 "idKota": address[0]["idKota"],
                 "kota": address[0]["kota"],
@@ -307,5 +308,4 @@ if __name__ == "__main__":
 @app.errorhandler(404)
 def page_not_found(error):
     return error
-
 
