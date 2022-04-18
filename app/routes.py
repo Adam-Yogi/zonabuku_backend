@@ -1,5 +1,7 @@
 from cmath import log
+from itertools import groupby
 import json
+from operator import itemgetter
 from flask import jsonify, request
 from app import app
 from app.database import Database
@@ -231,6 +233,68 @@ def delCartItem():
     except:
         return jsonify({'msg':'error while deleting cart item'}),400
 
+@cross_origin
+@app.route("/checkout", methods=["GET"])
+@jwt_required()
+def checkout():
+    try:
+        current_user_email = get_jwt_identity()
+        data, row_headers = db.getCartItem(current_user_email)
+        cart_item = toJsonFormat(data, row_headers)
+        total_harga = 0
+        #sorting berdasarkan email
+        cart_item.sort(key=lambda x:x["userEmail"])
+        #tambahkan total harga di tiap data
+        for item in cart_item:
+            total_harga = item["harga"] * item["quantity"]
+            item["totalHarga"] = total_harga
+        
+        cartAll = []
+        #Buat list of list. Dalam list ada dictionary. Dictionary pertama isi data address. 
+        #Dictionary selanjutnya berisi data buku yang dari penjual dengan email yang sama 
+        for key, value in groupby(cart_item, key=itemgetter('userEmail')):
+            data, row_headers = db.getAddress(current_user_email)
+            address = toJsonFormat(data, row_headers)
+            addressData =  {"email":key,"alamat":address[0]["alamat"],"idKota":address[0]["idKota"],
+                            "kota":address[0]["kota"],"idprovinsi":address[0]["idProvinsi"],"provinsi":address[0]["provinsi"]}
+            cartGrouped = []
+            cartGrouped.append(addressData)
+            print(key)
+            for k in value:
+                cartGrouped.append(k)
+            cartAll.append(cartGrouped)
+        
+        return jsonify(cartAll)
+    except:
+        return jsonify({"msg": "error while getting cart item"}), 400
+
+@cross_origin
+@app.route('/kurir', methods=["GET"])
+def getKurir():
+    try:
+        kurir, row_headers = db.getKurir()
+        kurir_data = toJsonFormat(kurir, row_headers)
+        return jsonify(kurir_data)
+    except:
+        return jsonify({'code':'400', 'msg':'error to getting kurir data'})
+
+@cross_origin
+@app.route('/updateaddress', methods=['PATCH'])
+@jwt_required()
+def updateAddress():
+    try:
+        current_user_email = get_jwt_identity()
+        alamat = request.json.get('alamat', None)
+        idKota = request.json.get('idKota', None)
+        kota = request.json.get('kota', None)
+        idProvinsi = request.json.get('idProvinsi', None)
+        provinsi = request.json.get('provinsi', None)
+        kodepos = request.json.get('kodepos', None)
+        db.updateAddress(current_user_email, alamat, idKota, kota, idProvinsi, provinsi, kodepos)
+        return jsonify({'msg':'update address succeed'}), 200
+    except:
+        return jsonify({'msg':'error while updating'}), 400
+
 if __name__ == "__main__":
     app.run()
 
@@ -238,3 +302,4 @@ if __name__ == "__main__":
 @app.errorhandler(404)
 def page_not_found(error):
     return error
+

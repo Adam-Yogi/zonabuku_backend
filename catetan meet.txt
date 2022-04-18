@@ -1,0 +1,23 @@
+database: 
+tabel address: + kolom email, id kota, id provinsi
+
+prosedur getUser: input email, output data profile user dan data alamat
+
+tabel kurir
+
+
+backend:
+route ganti address:
+input email, alamat, nama kota, nama provinsi, id kota, id provinsi, kode pos
+simpan input ke tabel address
+
+route show kurir:
+output: semua nama kurir di tabel kurir
+
+
+frontend + ui:
+page address: page baru untuk ganti alamat. 
+
+page order detail:
+page untuk checkout. Ada pilihan kurir, alamat pengiriman sekarang atau alamat baru
+tunjukkan total harga + biaya kirim

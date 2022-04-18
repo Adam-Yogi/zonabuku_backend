@@ -134,4 +134,30 @@ class Database:
         mysql.connection.commit()
         cur.close()
 
+    def getAddress(self, email):
+        cur = self.connect()
+        cur.execute("SELECT * FROM user_address WHERE userEmail = %s", [email])
+        row_headers = [x[0] for x in cur.description] 
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
+    def getKurir(self):
+        cur = self.connect()
+        cur.execute("SELECT * FROM kurir")
+        row_headers = [x[0] for x in cur.description]
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
+    def updateAddress(self, email, alamat, idKota, kota, idProvinsi, provinsi, kodepos):
+        cur = self.connect()
+        cur.execute(
+        "UPDATE user_address SET alamat= %s, idKota= %s, kota= %s, idProvinsi= %s, provinsi= %s, kodepos= %s WHERE userEmail= %s;",
+        (alamat, idKota, kota, idProvinsi, provinsi, kodepos, email),
+        )
+
+        mysql.connection.commit()
+        cur.close()
+
     
