@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 18, 2022 at 09:20 AM
+-- Generation Time: Apr 18, 2022 at 10:49 AM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.2
 
@@ -86,7 +86,7 @@ GROUP BY cart.userEmail;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getUserProfile` (IN `in_userEmail` VARCHAR(100))  BEGIN
-SELECT CONCAT(user.first_name," ", user.last_name) AS 'nama', user.email, user.no_telp, user.profile_pic, user_address.alamat, user_address.kota, user_address.idKota, user_address.provinsi, user_address.idProvinsi, user_address.kodepos
+SELECT CONCAT(user.first_name," ", user.last_name) AS 'nama', user.userID, user.email, user.no_telp, user.profile_pic, user_address.alamat, user_address.kota, user_address.idKota, user_address.provinsi, user_address.idProvinsi, user_address.kodepos
 FROM user
 JOIN user_address ON user.email = user_address.userEmail
 WHERE user.email = in_userEmail;
