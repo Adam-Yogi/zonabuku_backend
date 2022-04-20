@@ -1,6 +1,7 @@
+from audioop import cross
 from cmath import log
 from itertools import groupby
-import json
+import requests
 from operator import itemgetter
 from flask import jsonify, request
 from app import app
@@ -250,8 +251,7 @@ def tes():
             item["totalHarga"] = total_harga
 
         cartAll = []
-        # Buat list of list. Dalam list ada dictionary. Dictionary pertama isi data address.
-        # Dictionary selanjutnya berisi data buku yang dari penjual dengan email yang sama
+
         for key, value in groupby(cart_item, key=itemgetter("userEmail")):
             data, row_headers = db.getUserAndAddress(key)
             address = toJsonFormat(data, row_headers)
@@ -301,6 +301,29 @@ def updateAddress():
     except:
         return jsonify({'msg':'error while updating'}), 400
 
+@cross_origin
+@app.route("/ongkir", methods=["GET"])
+def ongkir():
+    destination = request.args.get("destination", None)
+    origin = request.args.get("origin", None)
+    courier = request.args.get("courier", None)
+    weight = request.args.get("weight", None)
+    api_key = request.headers["key"]
+    print(destination, origin, courier, weight, api_key)
+    headers = {"Content-Type": "application/x-www-form-urlencoded", "key": api_key}
+    data = {
+        "origin": origin,
+        "destination": destination,
+        "courier": courier,
+        "weight": weight,
+    }
+
+    res = requests.post("https://api.rajaongkir.com/starter/cost", headers=headers, data=data)
+    ongkir = res.json()
+    print(ongkir)
+
+    return jsonify(ongkir)
+
 if __name__ == "__main__":
     app.run()
 
@@ -308,4 +331,3 @@ if __name__ == "__main__":
 @app.errorhandler(404)
 def page_not_found(error):
     return error
-
