@@ -1,4 +1,5 @@
 from cmath import log
+import email
 from app import mysql
 
 
@@ -167,5 +168,44 @@ class Database:
 
         mysql.connection.commit()
         cur.close()
+
+    def createOrder(self, email, totalHarga, bank, paymentType):
+        cur = self.connect()
+        cur.execute(
+        "INSERT INTO orders (custEmail, totalHarga, bank, paymentType) VALUES (%s,%s,%s,%s)",
+        (email, totalHarga, bank, paymentType))
+        mysql.connection.commit()
+        cur.execute("SELECT LAST_INSERT_ID();")
+        row_headers = [x[0] for x in cur.description]
+        rv = cur.fetchall()
+        cur.close()
+        return rv,row_headers
+    
+    def inputOrder(self,id,vanumber,status):
+        cur = self.connect()
+        cur.execute(
+        "UPDATE orders SET vanumber=%s, status=%s WHERE OrderID=%s",
+        (vanumber, status,id)
+        )
+        mysql.connection.commit()
+        cur.close()
+
+    def getOrder(self,email):
+        cur = self.connect()
+        cur.execute("SELECT * FROM orders WHERE custEmail = %s", [email])
+        row_headers = [x[0] for x in cur.description] 
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
+    def updateStatus(self,id,status):
+        cur = self.connect()
+        cur.execute(
+        "UPDATE orders SET status=%s WHERE OrderID=%s",
+        (status,id)
+        )
+        mysql.connection.commit()
+        cur.close()
+
 
     

@@ -1,3 +1,4 @@
+import midtransclient
 from audioop import cross
 from cmath import log
 from itertools import groupby
@@ -10,6 +11,7 @@ from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_cors import cross_origin
+
 
 
 db = Database()
@@ -237,7 +239,7 @@ def delCartItem():
 @cross_origin
 @app.route("/checkout", methods=["GET"])
 @jwt_required()
-def tes():
+def checkout():
     try:
         current_user_email = get_jwt_identity()
         data, row_headers = db.getCartItem(current_user_email)
@@ -324,6 +326,188 @@ def ongkir():
 
     return jsonify(ongkir)
 
+@cross_origin
+@app.route("/buatorder", methods=["POST", "GET"])
+@jwt_required()
+def buatorder():
+
+    # TODO : PERTAMA, Terima data dari frontend => nama bank, totalHarga
+    # TODO : masukkin kedua data tersebut ke tabel order, setelah itu kita perlu
+    # data order id, nama bank, sama total harga buat request ke midtrans
+    # TODO :  pilih param sesuai nama bank, 'bri' maka param nya pilih yang bri ('bri','mandiri','bca','permata','bni')
+    # TODO : request ke midtrans pake method charge param, dengan param nya yg sudah dipilih tadi
+    # data response akan seperti ini
+
+    # USE CASE : BNI
+    # USE CASE : BNI -> user bayar pake va_number, jadi simpen aja va_numbernya
+    # virtual_account = response["va_numbers"][0]['va_number']
+    contoh_response_bni = {
+        "currency": "IDR",
+        "fraud_status": "accept",
+        "gross_amount": "44000.00",
+        "merchant_id": "G914563348",
+        "order_id": "order-109",
+        "payment_type": "bank_transfer",
+        "status_code": "201",
+        "status_message": "Success, Bank Transfer transaction is created",
+        "transaction_id": "d2592167-f317-4102-8ffa-99e0ec95e6c5",
+        "transaction_status": "pending",
+        "transaction_time": "2022-04-26 07:56:49",
+        "va_numbers": [{"bank": "bni", "va_number": "9886334840985088"}],
+    }
+
+    # USE CASE : BRI
+    # USE CASE : BRI -> user bayar pake va_number, jadi simpen aja va_numbernya
+    # virtual_account = response["va_numbers"][0]['va_number']
+    contoh_response_bri = {
+        "currency": "IDR",
+        "fraud_status": "accept",
+        "gross_amount": "44000.00",
+        "merchant_id": "G914563348",
+        "order_id": "order-109",
+        "payment_type": "bank_transfer",
+        "status_code": "201",
+        "status_message": "Success, Bank Transfer transaction is created",
+        "transaction_id": "decbbda7-7b94-46b8-b892-3aa738113c88",
+        "transaction_status": "pending",
+        "transaction_time": "2022-04-26 08:28:01",
+        "va_numbers": [{"bank": "bri", "va_number": "633489584538092100"}],
+    }
+    # USE CASE : BCA
+    # virtual_account = response["va_numbers"][0]['va_number']
+    contoh_response_bca = {
+        "currency": "IDR",
+        "fraud_status": "accept",
+        "gross_amount": "44000.00",
+        "merchant_id": "G914563348",
+        "order_id": "order-109",
+        "payment_type": "bank_transfer",
+        "status_code": "201",
+        "status_message": "Success, Bank Transfer transaction is created",
+        "transaction_id": "798d936b-2715-4460-b051-aa98768e48bd",
+        "transaction_status": "pending",
+        "transaction_time": "2022-04-26 08:43:23",
+        "va_numbers": [{"bank": "bca", "va_number": "63348989640"}],
+    }
+    
+    # TODO : masukkin Virtual acc number ke tabel order
+
+    # OVERVIEW
+    # -- terima data nama bank dan total harga dari frontend
+    # -- charge ke api midtrans dan dapetin VA/virtual account number
+    # -- simpen data tersebut ke tabel order (order_id, user email, bank_payment, total_harga, virtual_account)
+    # -- buat route untuk ngambil data dari tabel order berdasarkan email user
+
+    # ----------<start daftar param>----------------------
+
+    bca = {
+        "payment_type": "bank_transfer",
+        "transaction_details": {"order_id": '33', "gross_amount": 12000},
+        "bank_transfer": {"bank": "bca"},
+    }
+
+    bni = {
+        "payment_type": "bank_transfer",
+        "transaction_details": {"order_id": '22', "gross_amount": 12000},
+        "bank_transfer": {"bank": "bni"},
+    }
+
+    bri = {
+        "payment_type": "bank_transfer",
+        "transaction_details": {"order_id": '22', "gross_amount": 12000},
+        "bank_transfer": {"bank": "bri"},
+    }
+
+    # -----------<end daftar param>-------------------
+
+    param = {}
+    current_user_email = get_jwt_identity()
+    bank = request.json.get('bank', None)
+    totalHarga = request.json.get('totalharga', None)
+
+    data, row_headers = db.createOrder(current_user_email,totalHarga,bank,"bank")
+    OrderID = toJsonFormat(data, row_headers)
+    id=OrderID[0]['LAST_INSERT_ID()']
+
+    if bank == "bri":
+
+        param = {
+        "payment_type": "bank_transfer",
+        "transaction_details": {"order_id": id, "gross_amount": totalHarga},
+        "bank_transfer": {"bank": "bri"},}
+
+    elif bank == "bni":
+
+        param = {
+        "payment_type": "bank_transfer",
+        "transaction_details": {"order_id": id, "gross_amount": totalHarga},
+        "bank_transfer": {"bank": "bni"},}
+
+    elif bank == "bca":
+
+        param = {
+        "payment_type": "bank_transfer",
+        "transaction_details": {"order_id": id, "gross_amount": totalHarga},
+        "bank_transfer": {"bank": "bca"},}
+
+    else:
+        return jsonify({"msg": "error, unknown bank name"})
+
+    chargeResponse = core_api.charge(param)
+    vanumber=chargeResponse['va_numbers'][0]['va_number']
+    status=chargeResponse['transaction_status']
+    db.inputOrder(id,vanumber,status)
+
+    return jsonify(chargeResponse)
+
+
+contoh_response_status = {
+    "currency": "IDR",
+    "fraud_status": "accept",
+    "gross_amount": "44000.00",
+    "merchant_id": "G914563348",
+    "order_id": "order-109",
+    "payment_amounts": [],
+    "payment_type": "bank_transfer",
+    "settlement_time": "2022-04-26 15:53:52",
+    "signature_key": "ff48367ac96dee4b8ab27dbe35e105c5699d6b4a42d34e18c00ed1c51bfabf1390c4ca57202c30e51a2782f9c54ea29b81ca453322a30b934616cd3018c167be",
+    "status_code": "200",
+    "status_message": "Success, transaction is found",
+    "transaction_id": "ad9590ae-5679-4ab5-ba12-4366f63f52f7",
+    "transaction_status": "settlement",
+    "transaction_time": "2022-04-26 15:53:00",
+    "va_numbers": [{"bank": "bca", "va_number": "63348587314"}],
+}
+
+@cross_origin
+@app.route("/Order", methods=["GET"])
+@jwt_required()
+def Order():
+    current_user_email = get_jwt_identity()
+    data, row_headers=db.getOrder(current_user_email)
+    orders = toJsonFormat(data, row_headers)
+    return jsonify(orders)
+
+@cross_origin
+@app.route("/cekstatuspembayaran", methods=["POST","GET","PATCH"])
+def cekPaymentStatus():
+    #Authorization di cek dulu sesuai password midtrans
+
+    orderID = request.json.get('orderID', None)
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Basic U0ItTWlkLXNlcnZlci1XYzliVURvN0x2dk54YnY1Z1ZXejQyZ3U6",
+    }
+
+    link=("https://api.sandbox.midtrans.com/v2/%s/status" % orderID)
+    res = requests.get(link, headers=headers)
+    ongkir = res.json()
+    status=ongkir['transaction_status']
+    db.updateStatus(orderID,status)
+    return jsonify(ongkir)
+    
+
 if __name__ == "__main__":
     app.run()
 
@@ -331,3 +515,9 @@ if __name__ == "__main__":
 @app.errorhandler(404)
 def page_not_found(error):
     return error
+
+core_api = midtransclient.CoreApi(
+    is_production=False,
+    server_key="SB-Mid-server-Wc9bUDo7LvvNxbv5gVWz42gu",
+    client_key="SB-Mid-client-ckck2z4FgZHRe2NT"
+)
