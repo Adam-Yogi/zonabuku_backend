@@ -505,7 +505,6 @@ def cekPaymentStatus():
     ongkir = res.json()
     status=ongkir['transaction_status']
     db.updateStatus(orderID,status)
-    return jsonify(ongkir)
     
 
 if __name__ == "__main__":
