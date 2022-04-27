@@ -330,96 +330,6 @@ def ongkir():
 @app.route("/buatorder", methods=["POST", "GET","PATCH"])
 @jwt_required()
 def buatorder():
-
-    # TODO : PERTAMA, Terima data dari frontend => nama bank, totalHarga
-    # TODO : masukkin kedua data tersebut ke tabel order, setelah itu kita perlu
-    # data order id, nama bank, sama total harga buat request ke midtrans
-    # TODO :  pilih param sesuai nama bank, 'bri' maka param nya pilih yang bri ('bri','mandiri','bca','permata','bni')
-    # TODO : request ke midtrans pake method charge param, dengan param nya yg sudah dipilih tadi
-    # data response akan seperti ini
-
-    # USE CASE : BNI
-    # USE CASE : BNI -> user bayar pake va_number, jadi simpen aja va_numbernya
-    # virtual_account = response["va_numbers"][0]['va_number']
-    contoh_response_bni = {
-        "currency": "IDR",
-        "fraud_status": "accept",
-        "gross_amount": "44000.00",
-        "merchant_id": "G914563348",
-        "order_id": "order-109",
-        "payment_type": "bank_transfer",
-        "status_code": "201",
-        "status_message": "Success, Bank Transfer transaction is created",
-        "transaction_id": "d2592167-f317-4102-8ffa-99e0ec95e6c5",
-        "transaction_status": "pending",
-        "transaction_time": "2022-04-26 07:56:49",
-        "va_numbers": [{"bank": "bni", "va_number": "9886334840985088"}],
-    }
-
-    # USE CASE : BRI
-    # USE CASE : BRI -> user bayar pake va_number, jadi simpen aja va_numbernya
-    # virtual_account = response["va_numbers"][0]['va_number']
-    contoh_response_bri = {
-        "currency": "IDR",
-        "fraud_status": "accept",
-        "gross_amount": "44000.00",
-        "merchant_id": "G914563348",
-        "order_id": "order-109",
-        "payment_type": "bank_transfer",
-        "status_code": "201",
-        "status_message": "Success, Bank Transfer transaction is created",
-        "transaction_id": "decbbda7-7b94-46b8-b892-3aa738113c88",
-        "transaction_status": "pending",
-        "transaction_time": "2022-04-26 08:28:01",
-        "va_numbers": [{"bank": "bri", "va_number": "633489584538092100"}],
-    }
-    # USE CASE : BCA
-    # virtual_account = response["va_numbers"][0]['va_number']
-    contoh_response_bca = {
-        "currency": "IDR",
-        "fraud_status": "accept",
-        "gross_amount": "44000.00",
-        "merchant_id": "G914563348",
-        "order_id": "order-109",
-        "payment_type": "bank_transfer",
-        "status_code": "201",
-        "status_message": "Success, Bank Transfer transaction is created",
-        "transaction_id": "798d936b-2715-4460-b051-aa98768e48bd",
-        "transaction_status": "pending",
-        "transaction_time": "2022-04-26 08:43:23",
-        "va_numbers": [{"bank": "bca", "va_number": "63348989640"}],
-    }
-    
-    # TODO : masukkin Virtual acc number ke tabel order
-
-    # OVERVIEW
-    # -- terima data nama bank dan total harga dari frontend
-    # -- charge ke api midtrans dan dapetin VA/virtual account number
-    # -- simpen data tersebut ke tabel order (order_id, user email, bank_payment, total_harga, virtual_account)
-    # -- buat route untuk ngambil data dari tabel order berdasarkan email user
-
-    # ----------<start daftar param>----------------------
-
-    bca = {
-        "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": '33', "gross_amount": 12000},
-        "bank_transfer": {"bank": "bca"},
-    }
-
-    bni = {
-        "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": '22', "gross_amount": 12000},
-        "bank_transfer": {"bank": "bni"},
-    }
-
-    bri = {
-        "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": '22', "gross_amount": 12000},
-        "bank_transfer": {"bank": "bri"},
-    }
-
-    # -----------<end daftar param>-------------------
-
     param = {}
     current_user_email = get_jwt_identity()
     bank = request.json.get('bank', None)
@@ -431,14 +341,13 @@ def buatorder():
 
     checkCartEmpty=db.cekCartEmpty(current_user_email)
     #looping memasukkan data satu satu dari cart ke order detail
-    db.moveCartToOrder(current_user_email,id)
+
     while(len(checkCartEmpty)!=0):
         db.moveCartToOrder(current_user_email,id)
         checkCartEmpty=db.cekCartEmpty(current_user_email)
 
     #order id ditambahkan string orderNumber agar id transaksi tidak cuma angka
     #biar unik dan nggak bentrok sama id yg udah dipake pas tes
-
     order_id=("orderNumber%s" % id)
 
     if bank == "bri":
@@ -517,7 +426,7 @@ def cekPaymentStatus():
     res = requests.get(link, headers=headers)
     ongkir = res.json()
     status=ongkir['transaction_status']
-    db.updateStatus(orderID,status)
+    db.updateStatus(id,status)
     
 if __name__ == "__main__":
     app.run()
