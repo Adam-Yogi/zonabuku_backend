@@ -172,7 +172,7 @@ class Database:
     def createOrder(self, email, totalHarga, bank, paymentType):
         cur = self.connect()
         cur.execute(
-        "INSERT INTO orders (custEmail, totalHarga, bank, paymentType) VALUES (%s,%s,%s,%s)",
+        "INSERT INTO orders (custEmail, totalHarga, bank, paymentType) VALUES (%s,%s,%s,%s);",
         (email, totalHarga, bank, paymentType))
         mysql.connection.commit()
         cur.execute("SELECT LAST_INSERT_ID();")
@@ -180,11 +180,24 @@ class Database:
         rv = cur.fetchall()
         cur.close()
         return rv,row_headers
+
+    def moveCartToOrder(self, email,orderID):
+        cur = self.connect()
+        cur.execute("CALL addOrderDetail(%s,%s);", (email,orderID))
+        mysql.connection.commit()
+        cur.close()
+
+    def cekCartEmpty(self,email):
+        cur = self.connect()
+        cur.execute("SELECT * FROM cart WHERE userEmail = %s", [email])
+        rv = cur.fetchall()
+        cur.close()
+        return rv
     
     def inputOrder(self,id,vanumber,status):
         cur = self.connect()
         cur.execute(
-        "UPDATE orders SET vanumber=%s, status=%s WHERE OrderID=%s",
+        "UPDATE orders SET vanumber=%s, status=%s WHERE OrderID=%s;",
         (vanumber, status,id)
         )
         mysql.connection.commit()
@@ -192,7 +205,7 @@ class Database:
 
     def getOrder(self,email):
         cur = self.connect()
-        cur.execute("SELECT * FROM orders WHERE custEmail = %s", [email])
+        cur.execute("SELECT * FROM orders WHERE custEmail = %s;", [email])
         row_headers = [x[0] for x in cur.description] 
         rv = cur.fetchall()
         cur.close()
@@ -206,6 +219,5 @@ class Database:
         )
         mysql.connection.commit()
         cur.close()
-
 
     

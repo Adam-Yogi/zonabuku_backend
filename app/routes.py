@@ -327,7 +327,7 @@ def ongkir():
     return jsonify(ongkir)
 
 @cross_origin
-@app.route("/buatorder", methods=["POST", "GET"])
+@app.route("/buatorder", methods=["POST", "GET","PATCH"])
 @jwt_required()
 def buatorder():
 
@@ -429,25 +429,37 @@ def buatorder():
     OrderID = toJsonFormat(data, row_headers)
     id=OrderID[0]['LAST_INSERT_ID()']
 
+    checkCartEmpty=db.cekCartEmpty(current_user_email)
+    #looping memasukkan data satu satu dari cart ke order detail
+    db.moveCartToOrder(current_user_email,id)
+    while(len(checkCartEmpty)!=0):
+        db.moveCartToOrder(current_user_email,id)
+        checkCartEmpty=db.cekCartEmpty(current_user_email)
+
+    #order id ditambahkan string orderNumber agar id transaksi tidak cuma angka
+    #biar unik dan nggak bentrok sama id yg udah dipake pas tes
+
+    order_id=("orderNumber%s" % id)
+
     if bank == "bri":
 
         param = {
         "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": id, "gross_amount": totalHarga},
+        "transaction_details": {"order_id": order_id, "gross_amount": totalHarga},
         "bank_transfer": {"bank": "bri"},}
 
     elif bank == "bni":
 
         param = {
         "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": id, "gross_amount": totalHarga},
+        "transaction_details": {"order_id": order_id, "gross_amount": totalHarga},
         "bank_transfer": {"bank": "bni"},}
 
     elif bank == "bca":
 
         param = {
         "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": id, "gross_amount": totalHarga},
+        "transaction_details": {"order_id": order_id, "gross_amount": totalHarga},
         "bank_transfer": {"bank": "bca"},}
 
     else:
@@ -493,7 +505,8 @@ def Order():
 def cekPaymentStatus():
     #Authorization di cek dulu sesuai password midtrans
 
-    orderID = request.json.get('orderID', None)
+    id = request.json.get('orderID', None)
+    orderID=("orderNumber%s" % id)
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
@@ -506,7 +519,6 @@ def cekPaymentStatus():
     status=ongkir['transaction_status']
     db.updateStatus(orderID,status)
     
-
 if __name__ == "__main__":
     app.run()
 
