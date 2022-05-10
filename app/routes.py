@@ -15,7 +15,7 @@ from flask_cors import cross_origin
 from dotenv import load_dotenv,find_dotenv
 
 db = Database()
-
+#test
 
 @cross_origin
 @app.route("/")
