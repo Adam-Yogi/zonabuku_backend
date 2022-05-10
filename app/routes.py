@@ -1,8 +1,9 @@
 import midtransclient
+import os
+import requests
 from audioop import cross
 from cmath import log
 from itertools import groupby
-import requests
 from operator import itemgetter
 from flask import jsonify, request
 from app import app
@@ -11,8 +12,7 @@ from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_cors import cross_origin
-
-
+from dotenv import load_dotenv,find_dotenv
 
 db = Database()
 
@@ -379,7 +379,7 @@ def buatorder():
     status=chargeResponse['transaction_status']
     db.inputOrder(id,vanumber,status)
 
-    return jsonify(chargeResponse)
+    return jsonify({"msg": "success making order"})
 
 
 contoh_response_status = {
@@ -427,7 +427,8 @@ def cekPaymentStatus():
     ongkir = res.json()
     status=ongkir['transaction_status']
     db.updateStatus(id,status)
-    
+    return jsonify({"msg": "status checked"})
+
 if __name__ == "__main__":
     app.run()
 
@@ -438,6 +439,6 @@ def page_not_found(error):
 
 core_api = midtransclient.CoreApi(
     is_production=False,
-    server_key="SB-Mid-server-Wc9bUDo7LvvNxbv5gVWz42gu",
-    client_key="SB-Mid-client-ckck2z4FgZHRe2NT"
+    server_key=os.getenv("server_key"),
+    client_key=os.getenv("client_key")
 )
