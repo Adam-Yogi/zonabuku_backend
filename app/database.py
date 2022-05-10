@@ -1,5 +1,4 @@
 from cmath import log
-import email
 from app import mysql
 
 
@@ -203,9 +202,15 @@ class Database:
         mysql.connection.commit()
         cur.close()
 
-    def getOrder(self,email):
+    def getOrder(self,email,id):
         cur = self.connect()
-        cur.execute("SELECT * FROM orders WHERE custEmail = %s;", [email])
+        #jika select memakai id, email = 0, dan sebaliknya
+        #select memakai email
+        if id== 0:
+            cur.execute("SELECT * FROM orders WHERE custEmail = %s;", [email])
+        #select memakai id
+        elif email== 0:
+            cur.execute("SELECT * FROM orders WHERE orderID = %s;", [id])
         row_headers = [x[0] for x in cur.description] 
         rv = cur.fetchall()
         cur.close()

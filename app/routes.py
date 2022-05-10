@@ -379,7 +379,10 @@ def buatorder():
     status=chargeResponse['transaction_status']
     db.inputOrder(id,vanumber,status)
 
-    return jsonify({"msg": "success making order"})
+    data, row_headers=db.getOrder(0,id)
+    newOrder = toJsonFormat(data, row_headers)
+    print(newOrder)
+    return jsonify(newOrder)
 
 
 contoh_response_status = {
@@ -405,7 +408,7 @@ contoh_response_status = {
 @jwt_required()
 def Order():
     current_user_email = get_jwt_identity()
-    data, row_headers=db.getOrder(current_user_email)
+    data, row_headers=db.getOrder(current_user_email,0)
     orders = toJsonFormat(data, row_headers)
     return jsonify(orders)
 
