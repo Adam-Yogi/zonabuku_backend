@@ -430,12 +430,12 @@ def OrderSeller():
     current_user_email = get_jwt_identity()
 
     #seller order 1 cuma mengembalikan nama_produk,quantity,revenue.
-    data, row_headers=db.getSellerOrder(current_user_email,1)
+    data, row_headers=db.getSellerOrders(current_user_email,1)
     sellerOrderProduct = toJsonFormat(data, row_headers)
 
     sellerOrder=[]
     for key,value in groupby(sellerOrderProduct, key=itemgetter("orderID")):
-        data, row_headers=db.getSellerOrder(current_user_email,0)
+        data, row_headers=db.getSellerOrders(current_user_email,0)
         sellerOrderData = toJsonFormat(data, row_headers)
         orderDataPerID={
             "orderID":key,
@@ -448,6 +448,31 @@ def OrderSeller():
             orderDataPerID["produk"].append(k)
         sellerOrder.append(orderDataPerID)
     return jsonify(sellerOrder)
+
+@cross_origin
+@app.route("/OrderSellerDetail", methods=["GET"])
+@jwt_required()
+def OrderSellerDetail():
+    orderID = request.json.get("orderID", None)
+    data, row_headers=db.getSellerOrderDetail(orderID)
+    orderDetail = toJsonFormat(data, row_headers)
+    return jsonify(orderDetail)
+
+@cross_origin
+@app.route("/rating", methods=["POST","GET","PATCH"])
+@jwt_required()
+def rating():
+    rate = request.json.get("rate", None)
+    productID = request.json.get("productID", None)
+
+    data, row_headers = db.getDetail(productID)
+    productDetail = toJsonFormat(data, row_headers)
+    totalPembeli=productDetail[0]["totalPembeli"]+1
+    totalRating=productDetail[0]["totalRating"]+rate
+    rate=totalRating/totalPembeli
+
+    db.updateRating(productID,rate,totalPembeli,totalRating)
+    return jsonify({"msg": "Product rated"})
 
 @cross_origin
 @app.route("/cekstatuspembayaran", methods=["POST","GET","PATCH"])

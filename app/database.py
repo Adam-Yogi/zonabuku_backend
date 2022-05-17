@@ -245,12 +245,20 @@ class Database:
         cur.close()
         return rv, row_headers
 
-    def getSellerOrder(self,email,value):
+    def getSellerOrders(self,email,value):
         cur = self.connect()
         if value==0:
             cur.execute("SELECT * FROM order_seller WHERE sellerEmail = %s ORDER BY orderID DESC;", [email])
         elif value==1:
             cur.execute("SELECT orderID,nama_produk,quantity,revenue FROM order_seller WHERE sellerEmail = %s ORDER BY orderID DESC;", [email])
+        row_headers = [x[0] for x in cur.description] 
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
+    def getSellerOrderDetail(self,orderID):
+        cur = self.connect()
+        cur.execute("SELECT * FROM order_seller WHERE orderID = %s;", [orderID])
         row_headers = [x[0] for x in cur.description] 
         rv = cur.fetchall()
         cur.close()
@@ -269,6 +277,15 @@ class Database:
         (status,id)
         )
         mysql.connection.commit()
+        
         cur.close()
 
+    def updateRating(self,productID,rate,totalPembeli,totalRating):
+        cur = self.connect()
+        cur.execute(
+        "UPDATE products SET rating=%s,totalPembeli=%s,totalRating=%s WHERE productID=%s",
+        (rate,totalPembeli,totalRating,productID)
+        )
+        mysql.connection.commit()
+        cur.close()
     
