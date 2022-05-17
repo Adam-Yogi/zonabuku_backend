@@ -272,6 +272,7 @@ def checkout():
             for k in value:
                 checkoutItem["produk"].append(k)
             cartAll.append(checkoutItem)
+        print(cartAll)
         return jsonify(cartAll)
     except:
         return jsonify({"msg": "error while getting cart item"}), 400
@@ -322,7 +323,6 @@ def ongkir():
 
     res = requests.post("https://api.rajaongkir.com/starter/cost", headers=headers, data=data)
     ongkir = res.json()
-    print(ongkir)
 
     return jsonify(ongkir)
 
@@ -343,7 +343,19 @@ def buatorder():
     #looping memasukkan data satu satu dari cart ke order detail
 
     while(len(checkCartEmpty)!=0):
-        db.moveCartToOrder(current_user_email,id)
+        data, row_headers=db.sellerOrderCartItem(current_user_email)
+        sellerCartData = toJsonFormat(data, row_headers)
+
+        data, row_headers=db.getUserFullAddress(current_user_email)
+        userAddress = toJsonFormat(data, row_headers)
+        productID=sellerCartData[0]['productID']
+        sellerEmail=sellerCartData[0]['userEmail']
+        namaProduk=sellerCartData[0]['nama']
+        quantity=sellerCartData[0]['quantity']
+        alamat=userAddress[0]['alamat']
+        revenue=sellerCartData[0]['harga']*sellerCartData[0]['quantity']
+
+        db.moveCartToOrder(current_user_email,id,productID,sellerEmail,namaProduk,quantity,alamat,revenue)
         checkCartEmpty=db.cekCartEmpty(current_user_email)
 
     #order id ditambahkan string orderNumber agar id transaksi tidak cuma angka
@@ -381,7 +393,6 @@ def buatorder():
 
     data, row_headers=db.getOrder(0,id)
     newOrder = toJsonFormat(data, row_headers)
-    print(newOrder)
     return jsonify(newOrder)
 
 
@@ -413,9 +424,36 @@ def Order():
     return jsonify(orders)
 
 @cross_origin
+@app.route("/OrderSeller", methods=["GET"])
+@jwt_required()
+def OrderSeller():
+    current_user_email = get_jwt_identity()
+
+    #seller order 1 cuma mengembalikan nama_produk,quantity,revenue.
+    data, row_headers=db.getSellerOrder(current_user_email,1)
+    sellerOrderProduct = toJsonFormat(data, row_headers)
+
+    sellerOrder=[]
+    for key,value in groupby(sellerOrderProduct, key=itemgetter("orderID")):
+        data, row_headers=db.getSellerOrder(current_user_email,0)
+        sellerOrderData = toJsonFormat(data, row_headers)
+        orderDataPerID={
+            "orderID":key,
+            "namaPenerima":sellerOrderData[0]["nama_penerima"],
+            "alamat":sellerOrderData[0]["alamat"],
+            "status":sellerOrderData[0]["status"],
+            "produk":[]
+        }
+        for k in value:
+            orderDataPerID["produk"].append(k)
+        sellerOrder.append(orderDataPerID)
+    return jsonify(sellerOrder)
+
+@cross_origin
 @app.route("/cekstatuspembayaran", methods=["POST","GET","PATCH"])
 def cekPaymentStatus():
     #Authorization di cek dulu sesuai password midtrans
+    #Authorization adalah Base64Encode("YourServerKey"+":")
 
     id = request.json.get('orderID', None)
     orderID=("orderNumber%s" % id)

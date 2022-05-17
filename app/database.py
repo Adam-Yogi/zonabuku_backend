@@ -33,6 +33,15 @@ class Database:
         cur.close()
         return rv, row_headers
 
+    def getUserFullAddress(self, email):
+        cur = self.connect()
+        cur.execute('SELECT CONCAT(user_address.alamat," , ", user_address.kota, " , ", user_address.provinsi) AS "alamat" FROM user_address WHERE userEmail=(%s);'
+        ,[email])
+        row_headers = [x[0] for x in cur.description] 
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
     def getUser(self, email):
         cur = self.connect()
         cur.execute("SELECT * FROM user WHERE email = %s", [email])
@@ -180,8 +189,22 @@ class Database:
         cur.close()
         return rv,row_headers
 
-    def moveCartToOrder(self, email,orderID):
+    def sellerOrderCartItem(self,email):
         cur = self.connect()
+        cur.execute("CALL showOrder(%s);",[email])
+        row_headers = [x[0] for x in cur.description]
+        rv = cur.fetchall()
+        cur.close()
+        return rv,row_headers
+
+    def moveCartToOrder(self, email,orderID,productID,sellerEmail,namaProduk,quantity,alamat,revenue):
+        cur = self.connect()
+
+        cur.execute(
+        "INSERT INTO order_seller (orderID, productID, sellerEmail, nama_produk,quantity,alamat,revenue) VALUES (%s,%s,%s,%s,%s,%s,%s);",
+        (orderID, productID, sellerEmail, namaProduk,quantity,alamat,revenue))
+        mysql.connection.commit()
+
         cur.execute("CALL addOrderDetail(%s,%s);", (email,orderID))
         mysql.connection.commit()
         cur.close()
@@ -192,12 +215,18 @@ class Database:
         rv = cur.fetchall()
         cur.close()
         return rv
-    
+
     def inputOrder(self,id,vanumber,status):
         cur = self.connect()
         cur.execute(
         "UPDATE orders SET vanumber=%s, status=%s WHERE OrderID=%s;",
         (vanumber, status,id)
+        )
+        mysql.connection.commit()
+
+        cur.execute(
+        "UPDATE order_seller SET status=%s WHERE orderID=%s;",
+        (status,id)
         )
         mysql.connection.commit()
         cur.close()
@@ -207,10 +236,21 @@ class Database:
         #jika select memakai id, email = 0, dan sebaliknya
         #select memakai email
         if id== 0:
-            cur.execute("SELECT * FROM orders WHERE custEmail = %s;", [email])
+            cur.execute("SELECT * FROM orders WHERE custEmail = %s ORDER BY orderID DESC;", [email])
         #select memakai id
         elif email== 0:
-            cur.execute("SELECT * FROM orders WHERE orderID = %s;", [id])
+            cur.execute("SELECT * FROM orders WHERE orderID = %s ORDER BY orderID DESC;", [id])
+        row_headers = [x[0] for x in cur.description] 
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
+    def getSellerOrder(self,email,value):
+        cur = self.connect()
+        if value==0:
+            cur.execute("SELECT * FROM order_seller WHERE sellerEmail = %s ORDER BY orderID DESC;", [email])
+        elif value==1:
+            cur.execute("SELECT orderID,nama_produk,quantity,revenue FROM order_seller WHERE sellerEmail = %s ORDER BY orderID DESC;", [email])
         row_headers = [x[0] for x in cur.description] 
         rv = cur.fetchall()
         cur.close()
@@ -220,6 +260,12 @@ class Database:
         cur = self.connect()
         cur.execute(
         "UPDATE orders SET status=%s WHERE OrderID=%s",
+        (status,id)
+        )
+        mysql.connection.commit()
+
+        cur.execute(
+        "UPDATE order_seller SET status=%s WHERE OrderID=%s",
         (status,id)
         )
         mysql.connection.commit()
