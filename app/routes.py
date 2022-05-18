@@ -450,6 +450,15 @@ def OrderSeller():
     return jsonify(sellerOrder)
 
 @cross_origin
+@app.route("/OrderDetail", methods=["GET"])
+@jwt_required()
+def OrderDetail():
+    orderID = request.json.get("orderID", None)
+    data, row_headers=db.OrderDetail(orderID)
+    orderDetail = toJsonFormat(data, row_headers)
+    return jsonify(orderDetail)
+
+@cross_origin
 @app.route("/OrderSellerDetail", methods=["GET"])
 @jwt_required()
 def OrderSellerDetail():

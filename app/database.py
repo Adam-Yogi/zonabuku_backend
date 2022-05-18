@@ -256,6 +256,14 @@ class Database:
         cur.close()
         return rv, row_headers
 
+    def OrderDetail(self,orderID):
+        cur = self.connect()
+        cur.execute("SELECT order_detail.orderID,order_detail.productID, order_detail.quantity, products.nama FROM order_detail JOIN products ON products.productID = order_detail.productID WHERE order_detail.orderID = %s;", [orderID])
+        row_headers = [x[0] for x in cur.description] 
+        rv = cur.fetchall()
+        cur.close()
+        return rv, row_headers
+
     def getSellerOrderDetail(self,orderID):
         cur = self.connect()
         cur.execute("SELECT * FROM order_seller WHERE orderID = %s;", [orderID])
