@@ -508,6 +508,12 @@ def cekPaymentStatus():
     #Authorization adalah Base64Encode("YourServerKey"+":")
 
     id = request.json.get('orderID', None)
+
+    data, row_headers=db.getOrder(0,id)
+    orderData = toJsonFormat(data, row_headers)
+    if orderData[0]["status"]=="finished":
+        return jsonify({"msg": "status checked"})
+
     orderID=("orderNumber%s" % id)
     headers = {
         "Accept": "application/json",
