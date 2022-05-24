@@ -258,7 +258,7 @@ class Database:
 
     def OrderDetail(self,orderID):
         cur = self.connect()
-        cur.execute("SELECT order_detail.orderID,order_detail.productID, order_detail.quantity, products.nama FROM order_detail JOIN products ON products.productID = order_detail.productID WHERE order_detail.orderID = %s;", [orderID])
+        cur.execute("SELECT order_detail.orderID,order_detail.productID, order_detail.quantity, order_detail.isRated, products.nama FROM order_detail JOIN products ON products.productID = order_detail.productID WHERE order_detail.orderID = %s;", [orderID])
         row_headers = [x[0] for x in cur.description] 
         rv = cur.fetchall()
         cur.close()
@@ -286,6 +286,15 @@ class Database:
         )
         mysql.connection.commit()
         
+        cur.close()
+
+    def updateIsRated(self,productID,orderID):
+        cur = self.connect()
+        cur.execute(
+        "UPDATE order_detail SET isRated=1 WHERE orderID=%s AND productID=%s",
+        (productID,orderID)
+        )
+        mysql.connection.commit()
         cur.close()
 
     def updateRating(self,productID,rate,totalPembeli,totalRating):

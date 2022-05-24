@@ -294,6 +294,7 @@ def updateAddress():
     try:
         current_user_email = get_jwt_identity()
         alamat = request.json.get('alamat', None)
+        print(alamat)
         idKota = request.json.get('idKota', None)
         kota = request.json.get('kota', None)
         idProvinsi = request.json.get('idProvinsi', None)
@@ -433,28 +434,34 @@ def OrderSeller():
     data, row_headers=db.getSellerOrders(current_user_email,1)
     sellerOrderProduct = toJsonFormat(data, row_headers)
 
+    i=0
     sellerOrder=[]
     for key,value in groupby(sellerOrderProduct, key=itemgetter("orderID")):
         data, row_headers=db.getSellerOrders(current_user_email,0)
         sellerOrderData = toJsonFormat(data, row_headers)
+
+        index=next((index for (index, d) in enumerate(sellerOrderData) if d["orderID"] == key), None)
+        print(index)
         orderDataPerID={
             "orderID":key,
-            "namaPenerima":sellerOrderData[0]["nama_penerima"],
-            "alamat":sellerOrderData[0]["alamat"],
-            "status":sellerOrderData[0]["status"],
+            "namaPenerima":sellerOrderData[index]["nama_penerima"],
+            "alamat":sellerOrderData[index]["alamat"],
+            "status":sellerOrderData[index]["status"],
             "produk":[]
         }
+        
         for k in value:
             orderDataPerID["produk"].append(k)
         sellerOrder.append(orderDataPerID)
+    
     return jsonify(sellerOrder)
 
 @cross_origin
-@app.route("/OrderDetail", methods=["GET"])
+@app.route("/OrderById", methods=["POST"])
 @jwt_required()
-def OrderDetail():
+def OrderById():
     orderID = request.json.get("orderID", None)
-    data, row_headers=db.OrderDetail(orderID)
+    data, row_headers = db.OrderDetail(orderID)
     orderDetail = toJsonFormat(data, row_headers)
     return jsonify(orderDetail)
 
@@ -473,7 +480,9 @@ def OrderSellerDetail():
 def rating():
     rate = request.json.get("rate", None)
     productID = request.json.get("productID", None)
-
+    orderID = request.json.get("orderID", None)
+    
+    db.updateIsRated(orderID,productID)
     data, row_headers = db.getDetail(productID)
     productDetail = toJsonFormat(data, row_headers)
     totalPembeli=productDetail[0]["totalPembeli"]+1
@@ -482,6 +491,15 @@ def rating():
 
     db.updateRating(productID,rate,totalPembeli,totalRating)
     return jsonify({"msg": "Product rated"})
+
+@cross_origin
+@app.route("/orderFinish", methods=["PATCH"])
+def orderFinish():
+    id = request.json.get('orderID', None)
+
+    status="finished"
+    db.updateStatus(id,status)
+    return jsonify({"msg": "status updated"})
 
 @cross_origin
 @app.route("/cekstatuspembayaran", methods=["POST","GET","PATCH"])
