@@ -11,7 +11,7 @@ class Database:
 
     def getNew(self):
         cur = self.connect()
-        cur.execute("SELECT * FROM products ORDER BY tgl_input DESC LIMIT 10")
+        cur.execute("SELECT * FROM products ORDER BY tgl_input DESC")
         row_headers = [x[0] for x in cur.description]  
         rv = cur.fetchall()
         cur.close()
@@ -104,13 +104,12 @@ class Database:
         mysql.connection.commit()
         cur.close()
 
-    def deleteProduct(self,productID):
+    def deletePro(self,productID):
         cur = self.connect()
-        cur.execute(
-            "CALL delproduct(%s);",
-            [productID]
-        )
+        cur.execute
+        ("CALL delproduct(%d);",[productID])
         mysql.connection.commit()
+        print("done")
         cur.close()
 
     def addToCart(self, email, productID, jumlah):

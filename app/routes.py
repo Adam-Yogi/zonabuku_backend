@@ -1,3 +1,4 @@
+from tokenize import Number
 import midtransclient
 import os
 import requests
@@ -23,7 +24,6 @@ db = Database()
 def home():
     data, row_headers = db.getNew()
     booksData = toJsonFormat(data, row_headers)
-    
     return jsonify(booksData)
 
 
@@ -60,10 +60,10 @@ def register():
     no_telp = request.json.get("no_telp", None)
     last_name = request.json.get("last_name", None)
     first_name = request.json.get("first_name", None)
-    print(email, password, last_name, first_name, no_telp)
+
     user, row_headers = db.getUser(email)
-    print(user)
-    print(len(user))
+
+
     if len(user) != 0:
         return jsonify({"error": "user exist"}), 400
     db.newUser(email, password, no_telp, first_name, last_name)
@@ -110,7 +110,7 @@ def updateProfilePic():
     try:
         current_user_email = get_jwt_identity()
         profile_pic=request.json.get('profile_pic',None)
-        print(profile_pic,current_user_email)
+
         db.updateUserProfilePic(current_user_email,profile_pic)
         return jsonify({'msg':'update succeed'}),200
     except:
@@ -166,13 +166,14 @@ def updateProduct():
         return jsonify({'msg':'error while updating product'}),400
 
 @cross_origin
-@app.route("/deleteproduct", methods=["DELETE"])
+@app.route("/deleteproduct", methods=["DELETE","PATCH"])
 @jwt_required()
 def deleteProduct():
     try:
         productID = request.json.get("id")
+        print(productID)
 
-        db.deleteProduct(productID)
+        db.deletePro(productID)
         response = jsonify({"msg": "delete product success"}), 200
         return response
     except:
@@ -216,7 +217,7 @@ def getCartItem():
         data_list = [cart_item, total_harga, total_quantity]
         # bikin dictionary dari dua list header_name:data_list
         res = {header_name[i]: data_list[i] for i in range(len(data_list))}
-
+        print(res)
         return jsonify(res), 200
     except:
         return jsonify({"msg": "error while getting cart item"}), 400
@@ -268,7 +269,6 @@ def checkout():
                 "produk": [],
             }
 
-            print(key)
             for k in value:
                 checkoutItem["produk"].append(k)
             cartAll.append(checkoutItem)
@@ -294,13 +294,15 @@ def updateAddress():
     try:
         current_user_email = get_jwt_identity()
         alamat = request.json.get('alamat', None)
-        print(alamat)
+
         idKota = request.json.get('idKota', None)
         kota = request.json.get('kota', None)
         idProvinsi = request.json.get('idProvinsi', None)
         provinsi = request.json.get('provinsi', None)
         kodepos = request.json.get('kodepos', None)
+        
         db.updateAddress(current_user_email, alamat, idKota, kota, idProvinsi, provinsi, kodepos)
+        print(alamat,idKota,kota,idProvinsi,provinsi,kodepos)
         return jsonify({'msg':'update address succeed'}), 200
     except:
         return jsonify({'msg':'error while updating'}), 400
@@ -313,7 +315,7 @@ def ongkir():
     courier = request.args.get("courier", None)
     weight = request.args.get("weight", None)
     api_key = request.headers["key"]
-    print(destination, origin, courier, weight, api_key)
+
     headers = {"Content-Type": "application/x-www-form-urlencoded", "key": api_key}
     data = {
         "origin": origin,
@@ -367,27 +369,40 @@ def buatorder():
 
         param = {
         "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": order_id, "gross_amount": totalHarga},
+        "transaction_details": {"order_id": order_id, "gross_amount": int(totalHarga) },
         "bank_transfer": {"bank": "bri"},}
 
     elif bank == "bni":
 
         param = {
         "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": order_id, "gross_amount": totalHarga},
+        "transaction_details": {"order_id": order_id, "gross_amount": int(totalHarga)},
         "bank_transfer": {"bank": "bni"},}
 
     elif bank == "bca":
 
         param = {
         "payment_type": "bank_transfer",
-        "transaction_details": {"order_id": order_id, "gross_amount": totalHarga},
+        "transaction_details": {"order_id": order_id, "gross_amount": int(totalHarga)},
         "bank_transfer": {"bank": "bca"},}
 
     else:
         return jsonify({"msg": "error, unknown bank name"})
 
-    chargeResponse = core_api.charge(param)
+
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Basic U0ItTWlkLXNlcnZlci0xNDlUTG1Nbjd3cEVIdDNZdmpESERTbHc=",
+    }
+    # chargeResponse = core_api.charge(param)
+    print('ini param')
+    print(param)
+    link="https://api.sandbox.midtrans.com/v2/charge"
+    chargeResponseJson = requests.post(link, headers=headers, data=param)
+    chargeResponse = chargeResponseJson.json()
+    print("ini")
+    print(chargeResponse)
     vanumber=chargeResponse['va_numbers'][0]['va_number']
     status=chargeResponse['transaction_status']
     db.inputOrder(id,vanumber,status)
@@ -441,7 +456,7 @@ def OrderSeller():
         sellerOrderData = toJsonFormat(data, row_headers)
 
         index=next((index for (index, d) in enumerate(sellerOrderData) if d["orderID"] == key), None)
-        print(index)
+
         orderDataPerID={
             "orderID":key,
             "namaPenerima":sellerOrderData[index]["nama_penerima"],
@@ -523,8 +538,8 @@ def cekPaymentStatus():
 
     link=("https://api.sandbox.midtrans.com/v2/%s/status" % orderID)
     res = requests.get(link, headers=headers)
-    ongkir = res.json()
-    status=ongkir['transaction_status']
+    status_res = res.json()
+    status=status_res['transaction_status']
     db.updateStatus(id,status)
     return jsonify({"msg": "status checked"})
 
